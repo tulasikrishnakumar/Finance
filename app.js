@@ -3,54 +3,59 @@
 // Features: LocalStorage state, Dynamic Month allocations,
 // Dynamic Tab switcher generation, Checklist CRUD, Cash Planner,
 // Bidirectional Budget-to-Checklist Sync, dynamic UI themes,
-// Supabase Auth & Cloud Sync for multi-device access.
+// Firebase Auth & Cloud Sync for multi-device access.
 // =============================================================
 
 // =============================================================
-// SUPABASE AUTH & CLOUD SYNC ENGINE
+// FIREBASE AUTH & CLOUD SYNC ENGINE
 // =============================================================
-let supabaseClient = null;
+let firebaseApp = null;
+let firebaseAuth = null;
+let firebaseDb = null;
 let currentUser = null;
 
-// Initialize Supabase client from stored credentials
-function initSupabase() {
-    const url = localStorage.getItem('sb_url');
-    const key = localStorage.getItem('sb_key');
-    if (url && key && window.supabase) {
-        try {
-            supabaseClient = window.supabase.createClient(url, key);
-        } catch (e) {
-            console.warn('Supabase init failed:', e);
-            supabaseClient = null;
+// Initialize Firebase from stored config JSON
+function initFirebase() {
+    const configStr = localStorage.getItem('fb_config');
+    if (!configStr || !window.firebase) return;
+    try {
+        const config = JSON.parse(configStr);
+        // Avoid re-initializing if app already exists
+        if (firebase.apps && firebase.apps.length) {
+            firebaseApp = firebase.apps[0];
+        } else {
+            firebaseApp = firebase.initializeApp(config);
         }
+        firebaseAuth = firebase.auth();
+        firebaseDb = firebase.firestore();
+    } catch (e) {
+        console.warn('Firebase init failed:', e);
+        firebaseApp = null;
+        firebaseAuth = null;
+        firebaseDb = null;
     }
 }
 
-// Upload state to Supabase cloud (upsert)
+// Upload state to Firestore cloud (set/merge)
 async function syncToCloud() {
-    if (!supabaseClient || !currentUser) return;
+    if (!firebaseDb || !currentUser) return;
     try {
-        await supabaseClient.from('user_finances').upsert({
-            user_id: currentUser.id,
+        await firebaseDb.collection('user_finances').doc(currentUser.uid).set({
             data: state,
             updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        });
     } catch (e) {
         console.warn('Cloud sync failed:', e);
     }
 }
 
-// Fetch state from Supabase cloud
+// Fetch state from Firestore cloud
 async function syncFromCloud() {
-    if (!supabaseClient || !currentUser) return false;
+    if (!firebaseDb || !currentUser) return false;
     try {
-        const { data, error } = await supabaseClient
-            .from('user_finances')
-            .select('data')
-            .eq('user_id', currentUser.id)
-            .single();
-        if (data && data.data) {
-            state = data.data;
+        const doc = await firebaseDb.collection('user_finances').doc(currentUser.uid).get();
+        if (doc.exists && doc.data() && doc.data().data) {
+            state = doc.data().data;
             saveLocalOnly();
             return true;
         }
@@ -100,8 +105,8 @@ async function handleAuthSubmit(e) {
     const password = document.getElementById('auth-password').value;
     const btn = document.getElementById('btn-auth-submit');
 
-    if (!supabaseClient) {
-        showAuthMessage('No database connected. Please configure Supabase settings first.', 'error');
+    if (!firebaseAuth) {
+        showAuthMessage('No database connected. Please configure Firebase settings first.', 'error');
         return;
     }
 
@@ -111,28 +116,25 @@ async function handleAuthSubmit(e) {
     try {
         let result;
         if (tab === 'signup') {
-            result = await supabaseClient.auth.signUp({ email, password });
+            result = await firebaseAuth.createUserWithEmailAndPassword(email, password);
         } else {
-            result = await supabaseClient.auth.signInWithPassword({ email, password });
+            result = await firebaseAuth.signInWithEmailAndPassword(email, password);
         }
 
-        if (result.error) {
-            showAuthMessage(result.error.message, 'error');
-            btn.disabled = false;
-            btn.textContent = tab === 'login' ? 'Log In' : 'Create Account';
-            return;
-        }
-
-        currentUser = result.data.user;
+        currentUser = result.user;
         if (tab === 'signup') {
-            showAuthMessage('Account created! Check your email to confirm, then log in.', 'success');
-            btn.disabled = false;
-            btn.textContent = 'Create Account';
+            showAuthMessage('Account created! You are now logged in.', 'success');
+            await onLoginSuccess(currentUser);
         } else {
             await onLoginSuccess(currentUser);
         }
     } catch (err) {
-        showAuthMessage('An unexpected error occurred. Try again.', 'error');
+        const msg = err.code === 'auth/user-not-found' ? 'No account found. Please sign up first.' :
+                    err.code === 'auth/wrong-password' ? 'Incorrect password. Please try again.' :
+                    err.code === 'auth/email-already-in-use' ? 'Email already registered. Please log in.' :
+                    err.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' :
+                    err.message || 'An unexpected error occurred. Try again.';
+        showAuthMessage(msg, 'error');
         btn.disabled = false;
         btn.textContent = tab === 'login' ? 'Log In' : 'Create Account';
     }
@@ -140,7 +142,6 @@ async function handleAuthSubmit(e) {
 
 async function onLoginSuccess(user) {
     currentUser = user;
-    // Try to fetch cloud state
     const fetched = await syncFromCloud();
     if (fetched) {
         applyLoadedState();
@@ -160,8 +161,8 @@ function enableOfflineMode() {
 }
 
 async function handleLogout() {
-    if (supabaseClient) {
-        await supabaseClient.auth.signOut();
+    if (firebaseAuth) {
+        await firebaseAuth.signOut();
     }
     currentUser = null;
     updateAuthBadge(false, 'Offline');
@@ -177,16 +178,13 @@ function updateAuthBadge(isOnline, label) {
     text.textContent = isOnline ? ('Synced: ' + label.split('@')[0]) : 'Offline';
 }
 
-// ---- Database Config Modal Controls ----
+// ---- Firebase Config Modal Controls ----
 function openDbConfigModal(e) {
     if (e) e.preventDefault();
     const modal = document.getElementById('db-config-modal');
     if (!modal) return;
-    // Pre-fill with stored values
-    const urlEl = document.getElementById('db-url');
-    const keyEl = document.getElementById('db-anon-key');
-    if (urlEl) urlEl.value = localStorage.getItem('sb_url') || '';
-    if (keyEl) keyEl.value = localStorage.getItem('sb_key') || '';
+    const configEl = document.getElementById('db-firebase-config');
+    if (configEl) configEl.value = localStorage.getItem('fb_config') || '';
     modal.style.display = 'flex';
 }
 
@@ -196,17 +194,21 @@ function closeDbConfigModal() {
 }
 
 function saveDbConfig() {
-    const url = document.getElementById('db-url').value.trim();
-    const key = document.getElementById('db-anon-key').value.trim();
-    if (!url || !key) {
-        alert('Please enter both Supabase URL and Anon Key.');
+    const configStr = document.getElementById('db-firebase-config').value.trim();
+    if (!configStr) {
+        alert('Please paste your Firebase config JSON.');
         return;
     }
-    localStorage.setItem('sb_url', url);
-    localStorage.setItem('sb_key', key);
+    try {
+        JSON.parse(configStr); // Validate JSON
+    } catch (e) {
+        alert('Invalid JSON format. Please paste the exact Firebase config object.');
+        return;
+    }
+    localStorage.setItem('fb_config', configStr);
     closeDbConfigModal();
-    initSupabase();
-    alert('Supabase configured! You can now log in to sync your data.');
+    initFirebase();
+    alert('Firebase configured! You can now log in to sync your data across all devices.');
 }
 
 // Apply fetched cloud state (same as loadState migrations)
@@ -297,28 +299,30 @@ let calendarSelectedDate = new Date(2026, 7, 9); // default August 9, 2026
 
 // Initialize Application
 async function initApp() {
-    initSupabase();
+    initFirebase();
 
-    // Check for existing Supabase session
-    if (supabaseClient) {
-        try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session && session.user) {
-                loadState();
-                setupEventListeners();
-                await onLoginSuccess(session.user);
-                return;
-            }
-        } catch (e) {
-            console.warn('Session check failed:', e);
-        }
-        // No session - show login overlay
-        loadState();
-        setupEventListeners();
-        updateDashboard();
-        showLoginOverlay();
+    // Check for existing Firebase session
+    if (firebaseAuth) {
+        // Firebase persists auth automatically; use onAuthStateChanged to detect session
+        await new Promise((resolve) => {
+            const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
+                unsubscribe();
+                if (user) {
+                    loadState();
+                    setupEventListeners();
+                    await onLoginSuccess(user);
+                } else {
+                    // No session - show login overlay
+                    loadState();
+                    setupEventListeners();
+                    updateDashboard();
+                    showLoginOverlay();
+                }
+                resolve();
+            });
+        });
     } else {
-        // No Supabase configured - run in offline mode
+        // No Firebase configured - run in offline mode
         loadState();
         setupEventListeners();
         updateDashboard();
