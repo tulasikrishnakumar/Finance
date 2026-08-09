@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K3 Personal Finance Application - K3 DEVSEC LABS</title>
+    <!-- Google Fonts: Outfit and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase Client JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="glow-bg-container">
+        <div class="glow-orb orb-indigo"></div>
+        <div class="glow-orb orb-emerald"></div>
+        <div class="glow-orb orb-amber"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <div class="logo-text">
+                    <h1>K3 Personal Finance</h1>
+                    <p>K3 DEVSEC LABS Application</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="date-badge">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="18" y2="10"></line></svg>
+                    <span id="current-date">August 2026</span>
+                </div>
+                <div id="auth-status-badge" class="auth-badge offline" onclick="openDbConfigModal(event)">
+                    <span class="auth-badge-dot"></span>
+                    <span id="auth-status-text">Offline</span>
+                </div>
+                <button id="btn-db-config" class="btn btn-secondary-icon" title="Database Sync Config" onclick="openDbConfigModal(event)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+                <button id="btn-export" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export to Excel
+                </button>
+                <button id="btn-reset" class="btn btn-danger-outline" title="Reset to original image data">
+                    Reset Data
+                </button>
+                <button id="btn-logout" class="btn btn-danger-outline" style="display: none;" title="Sign Out" onclick="handleLogout()">
+                    Sign Out
+                </button>
+            </div>
+        </header>
+
+        <!-- TOP KEY METRICS SUMMARY -->
+        <section class="metrics-grid">
+            <div class="metric-card card-income">
+                <div class="metric-content">
+                    <span class="metric-label" id="lbl-top-income">Income</span>
+                    <span class="metric-value" id="val-total-income">₹35,000</span>
+                </div>
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                </div>
+            </div>
+            
+            <div class="metric-card card-expense">
+                <div class="metric-content">
+                    <span class="metric-label" id="lbl-top-expenses">Total Outflow</span>
+                    <span class="metric-value" id="val-total-expenses">₹25,445</span>
+                </div>
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                </div>
+            </div>
+
+            <div class="metric-card card-savings">
+                <div class="metric-content">
+                    <span class="metric-label" id="lbl-top-savings">Net Savings</span>
+                    <span class="metric-value" id="val-remaining-savings">₹9,555</span>
+                </div>
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+            </div>
+
+            <div class="metric-card card-debt">
+                <div class="metric-content">
+                    <span class="metric-label">Outstanding Loans</span>
+                    <span class="metric-value" id="val-total-debt">₹26,295</span>
+                </div>
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- MONTHLY TRENDS CHART CARD -->
+        <div class="column-card glass-card theme-card" style="margin-bottom: 0.5rem; width: 100%;">
+            <div class="card-header theme-header">
+                <h2 style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;">Monthly Financial Trends</h2>
+                <span class="badge theme-badge">Comparative Ledger Graph</span>
+            </div>
+            <div class="card-body" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; overflow: visible;">
+                <div id="trend-chart-container" style="height: 180px; position: relative; width: 100%;">
+                    <!-- Dynamically generated SVG Bar chart goes here -->
+                </div>
+                <!-- Legend -->
+                <div style="display: flex; gap: 1.5rem; justify-content: center; font-size: 0.75rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #10b981; border-radius: 3px; box-shadow: 0 0 8px rgba(16,185,129,0.3);"></span> Total Income</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #f43f5e; border-radius: 3px; box-shadow: 0 0 8px rgba(244,63,94,0.3);"></span> Total Outflow</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: var(--theme-accent, #6366f1); border-radius: 3px; box-shadow: 0 0 8px var(--theme-accent-glow, rgba(99,102,241,0.3));" id="legend-savings-indicator"></span> Net Savings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH SWITCHER TABS & ACTION BUTTONS -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 10px;">
+            <div class="tasks-tabs" id="global-month-switcher" style="background: rgba(255,255,255,0.02); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 4px; width: fit-content;">
+                <!-- Dynamically populated monthly tab buttons -->
+            </div>
+            <button id="btn-add-month" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Next Month
+            </button>
+        </div>
+
+        <!-- MAIN LAYOUT -->
+        <main class="dashboard-grid">
+            
+            <!-- LEFT SECTION CONTAINER (Active month dashboard contents, recolored dynamically by Javascript theme classes) -->
+            <div id="active-month-dashboard" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Tier 1: Expanded Budget Planner Card -->
+                <div class="column-card glass-card theme-card">
+                    <div class="card-header theme-header">
+                        <h2 style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;" id="budget-card-title">August Budget</h2>
+                        <span class="badge theme-badge">Expanded Planner</span>
+                    </div>
+                    <div class="card-body" style="padding: 1.5rem;">
+                        <div class="budget-card-layout">
+                            <!-- Left Side: Inputs Column -->
+                            <div style="display: flex; flex-direction: column; gap: 1.25rem; max-height: 52vh; overflow-y: auto; padding-right: 0.75rem;">
+                                <!-- Income Section -->
+                                <div class="input-section">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h3 style="font-size: 0.8rem; color: var(--text-secondary);">Income Sources</h3>
+                                        <span class="subtotal-badge" id="subtotal-income">₹25,000</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="input-income-primary">Primary Income</label>
+                                            <div class="input-wrapper"><span class="input-currency">₹</span><input type="number" id="input-income-primary" value="15000"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-income-side">Side Income</label>
+                                            <div class="input-wrapper"><span class="input-currency">₹</span><input type="number" id="input-income-side" value="10000"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin-top: 0.5rem;" id="bonus-input-wrapper">
+                                        <label for="input-income-bonus">Extra / Bonus (One-time)</label>
+                                        <div class="input-wrapper"><span class="input-currency">₹</span><input type="number" id="input-income-bonus" value="0"></div>
+                                    </div>
+                                </div>
+                                <!-- Core Expenditures -->
+                                <div class="input-section">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h3 style="font-size: 0.8rem; color: var(--text-secondary);">Core Expenditures</h3>
+                                        <span class="subtotal-badge" id="subtotal-core">₹23,150</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                                        <span>Rent, Maint & Utilities</span><span id="subtotal-rent-bills">₹11,000</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="input-rent">Rent</label>
+                                            <input type="number" id="input-rent" value="9000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-maintenance">Maintenance</label>
+                                            <input type="number" id="input-maintenance" value="1000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-utilities">Current + Water</label>
+                                            <input type="number" id="input-utilities" value="1000">
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0.25rem;">
+                                        <span>Wi-Fi & Recharges</span><span id="subtotal-wifi-recharges">₹2,150</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="input-wifi">Personal Wi-Fi</label>
+                                            <input type="number" id="input-wifi" value="450">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-home-wifi">Home Wi-Fi</label>
+                                            <input type="number" id="input-home-wifi" value="700">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-phone">Phone</label>
+                                            <input type="number" id="input-phone" value="1000">
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0.25rem;">
+                                        <span>Wife Allowance</span><span>₹10,000</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="input-kalpana">Kalpana Allowance</label>
+                                        <input type="number" id="input-kalpana" value="10000">
+                                    </div>
+                                </div>
+                                <!-- Meesho & Dues -->
+                                <div class="input-section">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h3 style="font-size: 0.8rem; color: var(--text-secondary);">Meesho & Dues</h3>
+                                        <span class="subtotal-badge" id="subtotal-discretionary">₹2,295</span>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="input-meesho">Meesho Shopping</label>
+                                            <input type="number" id="input-meesho" value="2000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input-slice-emi">Slice EMI</label>
+                                            <input type="number" id="input-slice-emi" value="295">
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; margin-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                                        <span style="color: var(--text-secondary);">Logged Spends (Current Month):</span>
+                                        <strong id="subtotal-daily-spends" style="color: var(--rose);">₹0</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Chart & Summary Column -->
+                            <div style="display: flex; flex-direction: column; justify-content: center; background: rgba(255,255,255,0.01); padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
+                                <h4 style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: #fff; text-align: center;" id="allocation-chart-title">August Share Allocation</h4>
+                                <div class="pie-chart-wrapper" style="margin-bottom: 1rem;">
+                                    <svg viewBox="0 0 36 36" class="circular-chart">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path id="chart-segment-essentials" class="circle-segment essentials" stroke-dasharray="53, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path id="chart-segment-wants" class="circle-segment wants" stroke-dasharray="9, 100" stroke-dashoffset="-53" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path id="chart-segment-savings" class="circle-segment savings" stroke-dasharray="38, 100" stroke-dashoffset="-62" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <text x="18" y="20.5" class="percentage" id="chart-percentage">38%</text>
+                                    </svg>
+                                    <div class="chart-legend" style="font-size: 0.7rem; display: flex; flex-direction: column; gap: 4px;">
+                                        <div class="legend-item"><span class="dot dot-indigo" style="background:#6366f1;"></span> Essentials (<span id="lbl-pct-essentials">53%</span>)</div>
+                                        <div class="legend-item"><span class="dot dot-amber"></span> Wants (<span id="lbl-pct-wants">9%</span>)</div>
+                                        <div class="legend-item"><span class="dot dot-emerald"></span> Savings (<span id="lbl-pct-savings">38%</span>)</div>
+                                    </div>
+                                </div>
+                                <div class="budget-summary-footer" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; justify-content: space-between;"><span style="color:var(--text-secondary);">Actual Income:</span><span id="budget-total-income" style="font-weight:600;">₹35,000</span></div>
+                                    <div style="display: flex; justify-content: space-between;"><span style="color:var(--text-secondary);">Total Outflow:</span><span id="budget-total-expenses" style="font-weight:600;">₹25,445</span></div>
+                                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 4px; margin-top: 4px; background: rgba(16, 185, 129, 0.05); padding: 4px 6px; border-radius: 6px;"><span class="theme-text" style="font-weight:700;">Net Saved at End of Month:</span><span id="budget-remaining-savings" style="color:var(--emerald); font-weight:700;">₹9,555</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tier 2: Calendar & Checklist side-by-side -->
+                <div class="bottom-row-grid">
+                    
+                    <!-- Card 2: Calendar Schedule & Log Spend -->
+                    <div class="column-card glass-card theme-card">
+                        <div class="card-header theme-header">
+                            <h2 style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;" id="calendar-card-title">August Calendar</h2>
+                            <span class="badge theme-badge">Interactive</span>
+                        </div>
+                        <div class="card-body" style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                            <!-- Calendar grid -->
+                            <div class="calendar-wrapper" style="background: rgba(0,0,0,0.15); padding: 0.75rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                                <div style="text-align: center; font-weight: 600; font-size: 0.85rem; color: #fff; margin-bottom: 0.5rem;" id="calendar-month-year">August 2026</div>
+                                <div class="calendar-weekdays" style="font-size: 0.7rem; display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                                </div>
+                                <div class="calendar-days" id="calendar-days-grid" style="font-size: 0.75rem; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                                    <!-- Dynamically rendered -->
+                                </div>
+                            </div>
+                            <!-- Events info & spends logger -->
+                            <div style="background: rgba(0,0,0,0.1); padding: 0.75rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                                <h4 style="font-size: 0.8rem; color: #fff; margin: 0 0 0.5rem 0;">Logged Spends for <span id="selected-date-str" class="theme-text">August 9, 2026</span></h4>
+                                <div class="day-events-list" id="day-events-list" style="min-height: 40px; display: flex; flex-direction: column; gap: 4px;">
+                                    <!-- Dynamically loaded -->
+                                </div>
+                                <!-- Spend Logger Form -->
+                                <div class="spend-log-form" style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                        <div style="display: flex; gap: 0.4rem;">
+                                            <select id="input-spend-category" style="font-size: 0.7rem; width: 90px; padding: 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                                <option value="Rapido">Rapido</option>
+                                                <option value="Shopping">Shopping</option>
+                                                <option value="Food">Food/Snacks</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            <input type="text" id="input-spend-title" placeholder="Description" style="font-size: 0.7rem; flex: 1; padding: 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                        </div>
+                                        <div style="display: flex; gap: 0.4rem;">
+                                            <input type="number" id="input-spend-amount" placeholder="Amount (₹)" style="font-size: 0.7rem; flex: 1; padding: 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                            <button id="btn-log-spend" class="btn theme-btn" style="padding: 0.3rem 0.75rem; font-size: 0.7rem; border-radius: 6px;">Add Spend</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Checklist & Cash Planner -->
+                    <div class="column-card glass-card theme-card">
+                        <div class="card-header theme-header">
+                            <h2 style="font-size: 1.1rem; font-family: 'Outfit', sans-serif;" id="checklist-card-title">August Checklist</h2>
+                            <span class="badge theme-badge">Track Dues</span>
+                        </div>
+                        <div class="card-body" style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                            <!-- Checklist -->
+                            <div style="background: rgba(0,0,0,0.12); padding: 0.75rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 style="margin: 0; font-size: 0.85rem; color: #fff;">Task Checklist</h3>
+                                    <button id="btn-toggle-task-crud" class="btn" style="background: rgba(255,255,255,0.05); font-size: 0.65rem; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); color: #fff;">+ Manage Dues</button>
+                                </div>
+                                <!-- Inline Dues Form (CRUD) -->
+                                <div id="task-crud-form" class="hidden" style="padding: 0.5rem; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 0.4rem;">
+                                    <div style="display: flex; gap: 0.4rem;">
+                                        <input type="text" id="input-task-title" placeholder="Dues Title" style="font-size: 0.7rem; flex: 1; padding: 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                        <input type="number" id="input-task-amount" placeholder="Amount (₹)" style="font-size: 0.7rem; width: 85px; padding: 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                    </div>
+                                    <div style="display: flex; gap: 0.4rem; align-items: center; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--text-secondary);">
+                                            <input type="checkbox" id="input-task-mandatory">
+                                            <label for="input-task-mandatory">Mandatory</label>
+                                        </div>
+                                        <input type="date" id="input-task-date" style="font-size: 0.7rem; padding: 0.2rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                        <button id="btn-add-checklist-task" class="btn theme-btn" style="padding: 0.25rem 0.6rem; font-size: 0.7rem; border-radius: 6px;">Add Due</button>
+                                    </div>
+                                </div>
+                                <ul class="task-list" id="list-tasks" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto;">
+                                    <!-- Dynamic checklist tasks -->
+                                </ul>
+                                <div id="checklist-summary" style="margin-top: 0.25rem; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.05); font-size: 0.75rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px;">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                            <!-- Cash Planner -->
+                            <div style="background: var(--theme-accent-glow); padding: 0.75rem; border-radius: 12px; border: 1px solid var(--theme-accent-border);">
+                                <h3 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 0.85rem; display: flex; align-items: center;">
+                                    Cash Planner
+                                    <span class="tooltip">ⓘ
+                                        <span class="tooltip-text">
+                                            The Cash Planner helps you track liquidity. It compares your Current Cash / Bank Balance against your total monthly outflows (checklist dues + logged spends) to show if you have a cash surplus or shortfall.
+                                        </span>
+                                    </span>
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
+                                    <label for="input-cash-in-hand" style="font-size: 0.7rem; color: var(--text-secondary);">Current Cash / Bank Balance:</label>
+                                    <div class="input-wrapper" style="margin-top: 2px;">
+                                        <span class="input-currency" style="font-size:0.75rem;">₹</span>
+                                        <input type="number" id="input-cash-in-hand" value="0" style="padding: 0.3rem 0.5rem 0.3rem 1.25rem; font-size:0.75rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff;">
+                                    </div>
+                                </div>
+                                <div class="planner-results" style="display: flex; flex-direction: column; gap: 2px; font-size: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;"><span>Monthly Outflow:</span><strong id="val-planner-expenses" style="color: #fff;">₹25,445</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Shortfall / Needed:</span><strong id="val-planner-needed" style="color: var(--rose);">₹25,445</strong></div>
+                                    <div style="display: flex; justify-content: space-between;"><span>Cash Surplus:</span><strong id="val-planner-surplus" style="color: var(--emerald);">₹0</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- COLUMN 2: OUTSTANDING DEBT LIST (Fixed, right-most) -->
+            <div class="column-card glass-card" id="card-debts" style="display: flex; flex-direction: column; height: fit-content; max-height: 85vh; border: 1px solid rgba(244, 63, 94, 0.25); background: rgba(244, 63, 94, 0.01);">
+                <div class="card-header" style="background: rgba(244, 63, 94, 0.08); border-bottom: 1px solid rgba(244, 63, 94, 0.2);">
+                    <h2 style="font-family: 'Outfit', sans-serif; color: #fecdd3;">Outstanding Debts</h2>
+                    <span class="badge badge-rose">Balance Tracker</span>
+                </div>
+                
+                <div class="card-body" style="overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                    <!-- Debt Balances Inputs -->
+                    <div class="input-section" style="border-bottom: none; padding-bottom: 0;">
+                        <h3>Outstanding Loans</h3>
+                        <div class="debt-input-grid" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div class="form-group">
+                                <label for="input-debt-roshan">Roshan (ASAP)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-currency">₹</span>
+                                    <input type="number" id="input-debt-roshan" value="15000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-debt-slice">Slice (Total)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-currency">₹</span>
+                                    <input type="number" id="input-debt-slice" value="10295">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-debt-stucred">Stucred (Close)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-currency">₹</span>
+                                    <input type="number" id="input-debt-stucred" value="1000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-debt-other">Other Loan</label>
+                                <div class="input-wrapper">
+                                    <span class="input-currency">₹</span>
+                                    <input type="number" id="input-debt-other" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Analysis (Simple, fixed) -->
+                    <div class="summary-analysis" style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                        <h3>Debt Balance Summary</h3>
+                        <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">Total Outstanding Debt:</span>
+                            <strong id="summary-total-debt" style="font-size: 1.3rem; color: var(--rose); font-family: 'Outfit', sans-serif;">₹26,295</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="app-footer">
+            <p>K3 Personal Finance Application &copy; 2026. Powered by K3 DEVSEC LABS.</p>
+        </footer>
+    </div>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <h2>K3 Personal Finance</h2>
+                <p>K3 DEVSEC LABS Application</p>
+            </div>
+            
+            <div class="login-tabs">
+                <button id="tab-login" class="login-tab active" onclick="switchAuthTab('login')">Log In</button>
+                <button id="tab-signup" class="login-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <!-- Login / Signup Form -->
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="auth-email" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Email Address</label>
+                    <input type="email" id="auth-email" required placeholder="name@company.com" style="width:100%;">
+                </div>
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label for="auth-password" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Password</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" minlength="6" style="width:100%;">
+                </div>
+                
+                <div id="auth-message" class="auth-message" style="display:none; padding:8px 12px; border-radius:8px; font-size:0.8rem; margin-bottom:1rem; line-height:1.3;"></div>
+
+                <button type="submit" id="btn-auth-submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:10px;">
+                    Access Dashboard
+                </button>
+            </form>
+
+            <div class="login-divider" style="text-align:center; margin:1.25rem 0; font-size:0.75rem; color:var(--text-muted); position:relative;">
+                <span style="background:#0f172a; padding:0 8px;">OR</span>
+            </div>
+
+            <button id="btn-offline-mode" class="btn btn-secondary-outline" onclick="enableOfflineMode()" style="width:100%; justify-content:center; padding:10px;">
+                Access Offline Mode (Local Storage Only)
+            </button>
+            
+            <div class="login-settings-link" style="text-align:center; margin-top:1.5rem; font-size:0.75rem;">
+                <a href="#" onclick="openDbConfigModal(event)" style="color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; text-decoration:underline;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Configure Supabase Sync Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATABASE CONFIG SETTINGS MODAL -->
+    <div id="db-config-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-panel" style="max-width: 450px; width:90%; padding:24px;">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <h2 style="font-size:1.25rem; font-family:'Outfit',sans-serif;">Supabase Sync Settings</h2>
+                <button class="close-btn" onclick="closeDbConfigModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
+                    To sync your data securely across all devices, create a free project on <a href="https://supabase.com" target="_blank" style="color:var(--theme-accent, var(--indigo)); text-decoration:underline;">Supabase.com</a>, and paste your Project URL and Anon API key below.
+                </p>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="db-url" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Supabase Project URL</label>
+                    <input type="url" id="db-url" placeholder="https://your-project.supabase.co" style="width:100%;">
+                </div>
+                <div class="form-group" style="margin-bottom:1.25rem;">
+                    <label for="db-anon-key" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Supabase Anon Public API Key</label>
+                    <input type="password" id="db-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="width:100%;">
+                </div>
+                <div class="db-setup-tips" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45;">
+                    <strong>Database Table Setup (SQL Query):</strong><br>
+                    <pre style="background:rgba(0,0,0,0.2); padding:6px; border-radius:4px; font-size:0.68rem; margin:6px 0; overflow-x:auto; color:#a5b4fc;">
+create table user_finances (
+  user_id uuid primary key references auth.users,
+  data jsonb not null,
+  updated_at timestamp default now()
+);</pre>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem;">
+                <button class="btn btn-secondary-outline" onclick="closeDbConfigModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveDbConfig()">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
