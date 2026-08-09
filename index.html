@@ -9,8 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Supabase Client JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Firebase SDK CDN (v10 modular compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="glow-bg-container">
@@ -479,49 +481,56 @@
             
             <div class="login-settings-link" style="text-align:center; margin-top:1.5rem; font-size:0.75rem;">
                 <a href="#" onclick="openDbConfigModal(event)" style="color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; text-decoration:underline;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Configure Supabase Sync Settings
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Configure Firebase Sync Settings
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- DATABASE CONFIG SETTINGS MODAL -->
+    <!-- FIREBASE CONFIG SETTINGS MODAL -->
     <div id="db-config-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-card glass-panel" style="max-width: 450px; width:90%; padding:24px;">
+        <div class="modal-card glass-panel" style="max-width: 480px; width:90%; padding:24px;">
             <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-                <h2 style="font-size:1.25rem; font-family:'Outfit',sans-serif;">Supabase Sync Settings</h2>
+                <h2 style="font-size:1.25rem; font-family:'Outfit',sans-serif;">Firebase Sync Settings</h2>
                 <button class="close-btn" onclick="closeDbConfigModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
-                    To sync your data securely across all devices, create a free project on <a href="https://supabase.com" target="_blank" style="color:var(--theme-accent, var(--indigo)); text-decoration:underline;">Supabase.com</a>, and paste your Project URL and Anon API key below.
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.45;">
+                    Create a free project on <a href="https://console.firebase.google.com" target="_blank" style="color:var(--theme-accent, var(--indigo)); text-decoration:underline;">Firebase Console</a>, enable <strong>Email/Password Auth</strong> and <strong>Firestore Database</strong>, then paste your Firebase config object below.
                 </p>
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label for="db-url" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Supabase Project URL</label>
-                    <input type="url" id="db-url" placeholder="https://your-project.supabase.co" style="width:100%;">
-                </div>
                 <div class="form-group" style="margin-bottom:1.25rem;">
-                    <label for="db-anon-key" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Supabase Anon Public API Key</label>
-                    <input type="password" id="db-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="width:100%;">
+                    <label for="db-firebase-config" style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-secondary);">Firebase Config JSON (from Project Settings &rarr; Your Apps)</label>
+                    <textarea id="db-firebase-config" rows="7" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-app.firebaseapp.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123:web:abc"
+}' style="width:100%; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#fff; padding:10px; font-family:monospace; font-size:0.72rem; resize:vertical;"></textarea>
                 </div>
-                <div class="db-setup-tips" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45;">
-                    <strong>Database Table Setup (SQL Query):</strong><br>
-                    <pre style="background:rgba(0,0,0,0.2); padding:6px; border-radius:4px; font-size:0.68rem; margin:6px 0; overflow-x:auto; color:#a5b4fc;">
-create table user_finances (
-  user_id uuid primary key references auth.users,
-  data jsonb not null,
-  updated_at timestamp default now()
-);</pre>
+                <div class="db-setup-tips" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 8px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.5;">
+                    <strong>Quick Setup:</strong><br>
+                    1. <a href="https://console.firebase.google.com" target="_blank" style="color:#a5b4fc;">console.firebase.google.com</a> &rarr; New Project &rarr; K3-Finance<br>
+                    2. Authentication &rarr; Get Started &rarr; Enable <strong>Email/Password</strong><br>
+                    3. Firestore Database &rarr; Create &rarr; <strong>Test Mode</strong><br>
+                    4. Project Settings &rarr; Your Apps &rarr; Web icon (&lt;/&gt;) &rarr; Copy config
                 </div>
             </div>
-            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem;">
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; margin-top:1.25rem;">
                 <button class="btn btn-secondary-outline" onclick="closeDbConfigModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveDbConfig()">Save & Connect</button>
+                <button class="btn btn-primary" onclick="saveDbConfig()">Save &amp; Connect</button>
             </div>
         </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        window.firebase = { initializeApp, getAuth, getFirestore };
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
