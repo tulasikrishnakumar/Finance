@@ -891,8 +891,8 @@ select option {
 }
 
 .event-dot.dot-due {
-    background-color: var(--theme-accent, #6366f1) !important;
-    box-shadow: 0 0 5px rgba(99, 102, 241, 0.7);
+    background-color: #fbbf24 !important;
+    box-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
 }
 
 .event-dot.dot-spend {

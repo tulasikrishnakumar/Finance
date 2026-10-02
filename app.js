@@ -2836,15 +2836,15 @@ function renderDayEventsList() {
     // Section 2: Payments Due (Tasks)
     if (tasks.length > 0) {
         const secHeader = document.createElement('div');
-        secHeader.style.cssText = 'font-size:0.68rem; font-weight:700; color:var(--theme-accent, #6366f1); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;';
-        secHeader.innerHTML = `<span>Due to Pay (${tasks.length})</span><span style="font-size:0.75rem;">₹${dayDuesTotal.toLocaleString('en-IN')}</span>`;
+        secHeader.style.cssText = 'font-size:0.68rem; font-weight:700; color:#fbbf24; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;';
+        secHeader.innerHTML = `<span>Due to Pay (${tasks.length})</span><span style="font-size:0.75rem; color:#fbbf24;">₹${dayDuesTotal.toLocaleString('en-IN')}</span>`;
         list.appendChild(secHeader);
 
         tasks.forEach(t => {
             const item = document.createElement('div');
             item.className = `event-item draggable-task-item ${t.completed ? 'completed' : ''}`;
             item.draggable = true;
-            item.style.borderLeft = '3px solid var(--theme-accent, #6366f1)';
+            item.style.borderLeft = '3px solid #fbbf24';
             if (t.completed) item.style.opacity = '0.65';
             item.title = "Drag onto any day cell to reschedule!";
 
