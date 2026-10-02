@@ -1408,20 +1408,264 @@ select option {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(4, 6, 14, 0.82);
-    backdrop-filter: blur(16px);
+    background: rgba(4, 6, 16, 0.85);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
+    z-index: 100000;
     padding: 20px;
+    animation: dialogFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modal-card, .login-card, .dialog-card {
+.modal-card, .login-card {
     background: rgba(12, 17, 36, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 22px;
+    border-radius: 24px;
     box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 45px rgba(99, 102, 241, 0.15);
+    animation: dialogSpringIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Luxury Animated GUI Dialog Popup */
+.dialog-card {
+    background: rgba(13, 18, 38, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 26px;
+    padding: 34px 30px 28px 30px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), 0 0 50px rgba(99, 102, 241, 0.18);
+    animation: dialogSpringIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.dialog-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes dialogSpringIn {
+    from { opacity: 0; transform: scale(0.82) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.dialog-icon-wrapper {
+    position: relative;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.15rem;
+}
+
+.dialog-icon-orb {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    filter: blur(12px);
+    opacity: 0.65;
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); opacity: 0.45; }
+    50% { transform: scale(1.18); opacity: 0.85; }
+}
+
+.dialog-icon-content {
+    position: relative;
+    z-index: 2;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+}
+
+.dialog-theme-danger .dialog-icon-content {
+    background: rgba(244, 63, 94, 0.2);
+    color: var(--rose);
+    border-color: rgba(244, 63, 94, 0.45);
+    box-shadow: 0 0 28px rgba(244, 63, 94, 0.4);
+}
+.dialog-theme-danger .dialog-icon-orb { background: var(--rose); }
+
+.dialog-theme-primary .dialog-icon-content {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 0 28px rgba(99, 102, 241, 0.4);
+}
+.dialog-theme-primary .dialog-icon-orb { background: var(--indigo); }
+
+.dialog-theme-emerald .dialog-icon-content {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--emerald);
+    border-color: rgba(16, 185, 129, 0.45);
+    box-shadow: 0 0 28px rgba(16, 185, 129, 0.4);
+}
+.dialog-theme-emerald .dialog-icon-orb { background: var(--emerald); }
+
+.dialog-theme-amber .dialog-icon-content {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--amber);
+    border-color: rgba(245, 158, 11, 0.45);
+    box-shadow: 0 0 28px rgba(245, 158, 11, 0.4);
+}
+.dialog-theme-amber .dialog-icon-orb { background: var(--amber); }
+
+.dialog-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.45rem;
+    letter-spacing: -0.4px;
+}
+
+.dialog-message {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 1.35rem;
+    max-width: 360px;
+}
+
+/* Dialog Prompt Input Field */
+.dialog-input-wrapper {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.4rem;
+}
+
+.dialog-currency-tag {
+    position: absolute;
+    left: 1rem;
+    color: #94a3b8;
+    font-size: 1.05rem;
+    font-weight: 800;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.dialog-input-field {
+    width: 100% !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 14px !important;
+    padding: 0.7rem 1rem 0.7rem 2.2rem !important;
+    color: #ffffff !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    text-align: left;
+    transition: all 0.2s ease !important;
+}
+
+.dialog-input-field:focus {
+    border-color: var(--theme-accent, #6366f1) !important;
+    box-shadow: 0 0 18px var(--theme-accent-glow) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dialog Action Buttons */
+.dialog-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+}
+
+.dialog-btn {
+    flex: 1;
+    position: relative;
+    padding: 12px 18px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    letter-spacing: 0.2px;
+    user-select: none;
+}
+
+.dialog-btn-cancel {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dialog-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.dialog-btn-cancel:active {
+    transform: translateY(0);
+}
+
+.dialog-btn-confirm {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
+}
+
+.dialog-btn-confirm:hover {
+    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+    transform: translateY(-1.5px);
+}
+
+.dialog-theme-danger .dialog-btn-confirm {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4) !important;
+}
+
+.dialog-theme-danger .dialog-btn-confirm:hover {
+    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%) !important;
+    box-shadow: 0 6px 25px rgba(244, 63, 94, 0.6) !important;
+    transform: translateY(-1.5px);
+}
+
+.dialog-theme-emerald .dialog-btn-confirm {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4) !important;
+}
+
+.dialog-theme-emerald .dialog-btn-confirm:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6) !important;
+    transform: translateY(-1.5px);
 }
 
 .app-toast {
