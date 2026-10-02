@@ -1808,6 +1808,80 @@ function reconcileIncomes() {
     });
 }
 
+function reconcileExpensesAndTasks() {
+    const cur = state.months ? state.months[state.activeMonth] : null;
+    if (!cur) return;
+    if (!cur.expenses) cur.expenses = {};
+    if (!cur.customExpenses) cur.customExpenses = [];
+    if (!state.tasks) state.tasks = [];
+
+    const monthTasks = state.tasks.filter(t => t.date && t.date.startsWith(state.activeMonth));
+
+    monthTasks.forEach(task => {
+        const lowTitle = (task.title || '').toLowerCase();
+        if (task.expenseKey === 'rent_maint' || (lowTitle.includes('rent') && lowTitle.includes('maint'))) {
+            task.expenseKey = 'rent_maint';
+            const maint = cur.expenses.maintenance || 0;
+            cur.expenses.rent = Math.max(0, task.amount - maint);
+        } else if (task.expenseKey === 'utilities' || lowTitle.includes('utilities')) {
+            task.expenseKey = 'utilities';
+            cur.expenses.utilities = task.amount;
+        } else if (task.expenseKey === 'wifi' || lowTitle === 'wifi' || lowTitle.includes('personal wi-fi')) {
+            task.expenseKey = 'wifi';
+            cur.expenses.wifi = task.amount;
+        } else if (task.expenseKey === 'homeWifi' || lowTitle.includes('home wi-fi') || lowTitle.includes('home wifi')) {
+            task.expenseKey = 'homeWifi';
+            cur.expenses.homeWifi = task.amount;
+        } else if (task.expenseKey === 'phone' || lowTitle.includes('phone recharge') || lowTitle.includes('phone')) {
+            task.expenseKey = 'phone';
+            cur.expenses.phone = task.amount;
+        } else if (task.expenseKey === 'sliceEmi' || lowTitle.includes('slice')) {
+            task.expenseKey = 'sliceEmi';
+            cur.expenses.sliceEmi = task.amount;
+        } else if (task.expenseKey === 'meesho' || lowTitle.includes('meesho')) {
+            task.expenseKey = 'meesho';
+            cur.expenses.meesho = task.amount;
+        } else if (task.expenseKey === 'kalpana' || lowTitle.includes('kalpana')) {
+            task.expenseKey = 'kalpana';
+            cur.expenses.kalpana = task.amount;
+        } else {
+            // It's a custom due (e.g. Rentmojo, Pocketly, Branch, etc.)
+            if (!task.expenseKey) task.expenseKey = task.id;
+            const existing = cur.customExpenses.find(ce => ce.id === task.expenseKey || ce.id === task.id);
+            if (existing) {
+                existing.title = task.title;
+                existing.amount = task.amount;
+                if (task.isMandatory) existing.category = 'essentials';
+            } else {
+                cur.customExpenses.push({
+                    id: task.expenseKey,
+                    title: task.title,
+                    amount: task.amount,
+                    category: task.isMandatory ? 'essentials' : 'essentials'
+                });
+            }
+        }
+    });
+
+    // Reverse sync: any customExpenses in cur.customExpenses that aren't on the checklist yet for this active month
+    cur.customExpenses.forEach(ce => {
+        const hasTask = monthTasks.some(t => t.expenseKey === ce.id || t.id === ce.id);
+        if (!hasTask && ce.amount > 0) {
+            state.tasks.push({
+                id: 'task_' + ce.id,
+                expenseKey: ce.id,
+                title: ce.title,
+                date: `${state.activeMonth}-05`,
+                amount: ce.amount,
+                category: 'bill',
+                completed: false,
+                isCore: false,
+                isMandatory: ce.category === 'essentials'
+            });
+        }
+    });
+}
+
 // =============================================================
 // 8. DASHBOARD RENDERING & ANALYTICS
 // =============================================================
@@ -1826,8 +1900,9 @@ function updateDashboard() {
 
     renderMonthTabs();
 
-    // Ensure bidirectional sync between Calendar Incomes and Budget Planner
+    // Ensure bidirectional sync between Calendar Incomes/Expenses and Budget Planner / Checklist
     reconcileIncomes();
+    reconcileExpensesAndTasks();
     renderCustomBudgetItems();
 
     // Theme coloration
@@ -3265,9 +3340,9 @@ window.deleteTask = async function(taskId) {
                 cur.expenses.maintenance = 0;
             } else if (cur.expenses[task.expenseKey] !== undefined) {
                 cur.expenses[task.expenseKey] = 0;
-            } else if (cur.customExpenses) {
-                const ce = cur.customExpenses.find(e => e.id === task.expenseKey);
-                if (ce) ce.amount = 0;
+            }
+            if (cur.customExpenses) {
+                cur.customExpenses = cur.customExpenses.filter(e => e.id !== task.expenseKey && e.id !== task.id);
             }
             syncInputsToActiveMonth();
         }
